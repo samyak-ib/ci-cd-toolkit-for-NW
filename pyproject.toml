@@ -1,0 +1,40 @@
+[project]
+name = "cicd-aihub"
+version = "0.0.6"
+requires-python = ">=3.10"
+authors = [
+    { name = "Vinay Thapa", email = "vinay.thapa@instabase.com" },
+]
+description = "Tools for building CI/CD workflows Instabase Solutions and Apps."
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "requests",
+  "python-dotenv"
+]
+
+[project.optional-dependencies]
+test = [
+  "black",
+  "pytest",
+  "pytest-cov",
+  "pytest-sugar"
+]
+
+[project.scripts]
+promote-solution="ib_cicd.promote_solution:main"
+promote-sb-solution="ib_cicd.promote_sb_solution:main"
+promote-build-solution="ib_cicd.promote_build_solution:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+include = [
+  "ib_cicd/",
+  "ib_cicd/assets/icon.png"
+]

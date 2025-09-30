@@ -1,0 +1,25 @@
+{
+    "source": {
+        "is_advanced": false,
+        "project_id": "01963d7c-7b75-7bf3-b334-2147f5e928be",
+        "flow_path": "",
+        "sb_name": "",
+        "flow_name": "",
+        "org": "ib-internal",
+        "workspace": "SolEng_workspace",
+        "app_id": "b06d9d7f-292d-4b09-9651-90a2a6d8b5ee",
+        "deployment_id": "01963946-5214-766d-b487-acbd6f52dadf",
+        "dependencies": []
+    },
+    "target": {
+        "org": "ib-internal",
+        "workspace": "CICD"
+    },
+    "settings": {
+        "rebuild": true
+    },
+    "testing": {
+        "regression": {}
+    },
+    "release_notes": "initial release v0.0.1"
+}

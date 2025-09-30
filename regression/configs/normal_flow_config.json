@@ -1,0 +1,25 @@
+{
+    "source": {
+        "is_advanced": true,
+        "project_id": "",
+        "flow_path": "ib-internal/vinay.thapa_instabase.com/fs/Instabase Drive/CICD/AdvancedApp/AdvancedApp.ibflow",
+        "sb_name": "",
+        "flow_name": "",
+        "org": "ib-internal",
+        "workspace": "vinay.thapa_instabase.com",
+        "app_id": "7d271760-a477-4ca2-a8ec-a010832645ef",
+        "deployment_id": "019512ac-0c78-7161-bef9-527aa5d66d98",
+        "dependencies": []
+    },
+    "target": {
+        "org": "ib-internal",
+        "workspace": "CICD"
+    },
+    "settings": {
+        "rebuild": false
+    },
+    "testing": {
+        "regression": {}
+    },
+    "release_notes": "initial release v0.0.1"
+}
