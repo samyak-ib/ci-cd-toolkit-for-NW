@@ -3,7 +3,7 @@ name = "cicd-aihub"
 version = "0.0.6"
 requires-python = ">=3.10"
 authors = [
-    { name = "Vinay Thapa", email = "vinay.thapa@instabase.com" },
+    { name = "Samyak Jain", email = "samyak.jain@instabase.com" },
 ]
 description = "Tools for building CI/CD workflows Instabase Solutions and Apps."
 readme = "README.md"
