@@ -98,9 +98,9 @@ jobs:
           PYTHON_PKG_VERSION: ${{ steps.python-package-version.outputs.PYTHON_PKG_VERSION }}
           PYTHON_PKG_PATH: ${{ steps.python-package-path.outputs.PYTHON_PKG_PATH }}
         with:
-          owner: instabase
-          repo: aihub-apps-ci-cd-workflows
-          token: ${{ secrets.VINAY_THAPA_PERSONAL_ACCESS_TOKEN }}
+          owner: samyak-ib
+          repo: ci-cd-test
+          token: ${{ secrets.SAMYAK_JAIN_PERSONAL_ACCESS_TOKEN }}
           tag: ${{ env.PYTHON_PKG_VERSION }}
           artifacts: ${{ env.PYTHON_PKG_PATH }}
           allowUpdates: true
