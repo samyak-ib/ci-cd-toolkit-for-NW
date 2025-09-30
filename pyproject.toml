@@ -1,6 +1,6 @@
 [project]
 name = "cicd-aihub"
-version = "0.0.6"
+version = "1.0.0"
 requires-python = ">=3.10"
 authors = [
     { name = "Samyak Jain", email = "samyak.jain@instabase.com" },

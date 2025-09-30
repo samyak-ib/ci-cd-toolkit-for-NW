@@ -90,3 +90,19 @@ jobs:
           generateReleaseNotes: true
           makeLatest: true
           allowUpdates: true
+
+      - name: Publish Release to Secondary Repo
+      # Publish a release to the secondary repository
+        uses: ncipollo/release-action@v1
+        env:
+          PYTHON_PKG_VERSION: ${{ steps.python-package-version.outputs.PYTHON_PKG_VERSION }}
+          PYTHON_PKG_PATH: ${{ steps.python-package-path.outputs.PYTHON_PKG_PATH }}
+        with:
+          owner: samyak-ib
+          repo: ci-cd-test
+          token: ${{ secrets.SAMYAK_JAIN_PERSONAL_ACCESS_TOKEN }}
+          tag: ${{ env.PYTHON_PKG_VERSION }}
+          artifacts: ${{ env.PYTHON_PKG_PATH }}
+          allowUpdates: true
+          artifactErrorsFailBuild: false
+          makeLatest: true
