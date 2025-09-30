@@ -1,0 +1,44 @@
+name: Weekly Regression Tests
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Run at midnight every Sunday
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install tox
+
+    - name: Run regression tests
+      env:
+        SOURCE_HOST_URL: "https://aihub.instabase.com"
+        TARGET_HOST_URL: "https://aihub.eu.instabase.com"
+        SOURCE_TOKEN: "gIfF8A7tqAaZOMOm2BgEWWiLCaT0h9"
+        TARGET_TOKEN: "dbRMJz0Q7nwW1xHxG8Ne9qr9CJTqbI"
+      run: |
+        tox -e regression
+
+    - name: Create issue on failure
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const issue = await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 Weekly Regression Test Failed',
+            body: 'The weekly regression test suite has failed. Please check the logs for details.'
+          });

@@ -1,0 +1,108 @@
+name: Build and Publish
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+    paths-ignore:
+      - "README.md"
+      - "Contributing.md"
+      - ".github/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build and release distribution 📦
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install pypa/build
+        run: >-
+          python3 -m
+          pip install
+          build
+          --user
+
+      - name: Build a binary wheel and a source tarball
+        run: python3 -m build
+
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: ib_cicd_dist
+          path: dist/
+
+      - name: Install package version reader
+        # Installs dasel into the environment for clean parsing of the pyproject.toml configuration
+        # Project lives at https://github.com/TomWright/dasel
+        # Installation instructions that this is taken from
+        # live at https://daseldocs.tomwright.me/installation#manual
+        run: >-
+          curl -sSLf
+          "$(curl -sSLf https://api.github.com/repos/tomwright/dasel/releases/latest | grep browser_download_url | grep linux_amd64 | grep -v .gz | cut -d\" -f 4)"
+          -L -o dasel
+          && chmod +x dasel
+
+      - name: Set package version
+        # Get the Python package version from the pyproject.toml
+        # and set it under python-package-version.PYTHON_PKG_VERSION for later use
+        id: python-package-version
+        run: >-
+          echo
+          "PYTHON_PKG_VERSION=$(cat pyproject.toml | ./dasel -r toml '.project.version' | tr -d "'")"
+          >> "$GITHUB_OUTPUT"
+
+      - name: Get package path
+        # Get the path to the built .whl file
+        # and set it under python-package-path.PYTHON_PKG_PATH for later use
+        id: python-package-path
+        run: >-
+          echo
+          "PYTHON_PKG_PATH=$(ls dist/*.whl)"
+          >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        # Publish a GitHub release with the built .whl
+        # using the version tag from pyproject.toml
+        uses: ncipollo/release-action@v1
+        env:
+          PYTHON_PKG_VERSION: ${{ steps.python-package-version.outputs.PYTHON_PKG_VERSION }}
+          PYTHON_PKG_PATH: ${{ steps.python-package-path.outputs.PYTHON_PKG_PATH }}
+        with:
+          tag: ${{ env.PYTHON_PKG_VERSION }}
+          artifacts: ${{ env.PYTHON_PKG_PATH }}
+          artifactErrorsFailBuild: true
+          generateReleaseNotes: true
+          makeLatest: true
+          allowUpdates: true
+
+      - name: Publish Release to Secondary Repo
+      # Publish a release to the secondary repository
+        uses: ncipollo/release-action@v1
+        env:
+          PYTHON_PKG_VERSION: ${{ steps.python-package-version.outputs.PYTHON_PKG_VERSION }}
+          PYTHON_PKG_PATH: ${{ steps.python-package-path.outputs.PYTHON_PKG_PATH }}
+        with:
+          owner: instabase
+          repo: aihub-apps-ci-cd-workflows
+          token: ${{ secrets.VINAY_THAPA_PERSONAL_ACCESS_TOKEN }}
+          tag: ${{ env.PYTHON_PKG_VERSION }}
+          artifacts: ${{ env.PYTHON_PKG_PATH }}
+          allowUpdates: true
+          artifactErrorsFailBuild: false
+          makeLatest: true
