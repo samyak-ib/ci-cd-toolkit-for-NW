@@ -111,6 +111,9 @@ class TestRebuildUtils(unittest.TestCase):
         result = post_udf("project_id", "token", "http://example.com", {"udf": "test"})
         self.assertEqual(result, {"udf_id": "123"})
         mock_post.assert_called_once()
+        _, kwargs = mock_post.call_args
+        self.assertEqual(kwargs["headers"].get("Authorization"), "Bearer token")
+        self.assertIn("IB-Certificate", kwargs["headers"])
 
     def test_sanitize_udf_payload(self):
         payload = {
@@ -209,6 +212,9 @@ class TestRebuildUtils(unittest.TestCase):
         result = get_validations("project_id", "token", "http://example.com")
         self.assertEqual(result, {"validations": "test"})
         mock_get.assert_called_once()
+        _, kwargs = mock_get.call_args
+        self.assertEqual(kwargs["headers"].get("Authorization"), "Bearer token")
+        self.assertIn("IB-Certificate", kwargs["headers"])
 
     @patch("requests.post")
     def test_post_validations(self, mock_post):
@@ -222,6 +228,9 @@ class TestRebuildUtils(unittest.TestCase):
         )
         self.assertEqual(result, {"validation_id": "123"})
         mock_post.assert_called_once()
+        _, kwargs = mock_post.call_args
+        self.assertEqual(kwargs["headers"].get("Authorization"), "Bearer token")
+        self.assertIn("IB-Certificate", kwargs["headers"])
 
     @patch("requests.delete")
     def test_delete_validations(self, mock_delete):
@@ -232,6 +241,9 @@ class TestRebuildUtils(unittest.TestCase):
         result = delete_validations("project_id", "token", "http://example.com", "1")
         self.assertEqual(result, mock_response)
         mock_delete.assert_called_once()
+        _, kwargs = mock_delete.call_args
+        self.assertEqual(kwargs["headers"].get("Authorization"), "Bearer token")
+        self.assertIn("IB-Certificate", kwargs["headers"])
 
     def test_update_fields_with_mapping(self):
         fields = [1, 2]

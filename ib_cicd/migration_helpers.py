@@ -3,6 +3,7 @@ from pathlib import Path
 from zipfile import ZipFile
 
 import requests
+from ib_cicd.certificates import with_instabase_certificate
 from ib_cicd.ib_helpers import (
     create_folder_if_it_does_not_exists,
     get_file_metadata,
@@ -75,7 +76,7 @@ def copy_package_from_marketplace(
         intermediate_path = os.path.join(intermediate_path, solution_name)
 
     copy_url = os.path.join(dev_marketplace_solution_url, "copy?is_v2=true")
-    headers = {"Authorization": f"Bearer {api_token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
     params = {"new_full_path": intermediate_path}
     resp = requests.post(copy_url, headers=headers, json=params, verify=False)
     resp.raise_for_status()
@@ -110,7 +111,7 @@ def check_if_file_exists_on_ib_env(
         return clients.ibfile.is_file(file_path)
     else:
         # Check file metadata and determine if file already exists
-        metadata_response = get_file_metadata(ib_host, api_token, file_path)
+    metadata_response = get_file_metadata(ib_host, api_token, file_path)
         if metadata_response.status_code == 200:
             try:
                 content_length = int(metadata_response.headers["Content-Length"])
