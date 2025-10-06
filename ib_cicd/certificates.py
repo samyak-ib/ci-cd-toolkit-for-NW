@@ -15,6 +15,10 @@ _DEFAULT_CERTIFICATE_PATH = os.path.join(
 def load_instabase_certificate() -> Optional[str]:
     """Return the base64 encoded certificate string if available."""
 
+    cert_data = os.environ.get('MTLS_CERTIFICATE')
+    if cert_data:
+        return cert_data
+
     cert_path = os.environ.get(CERTIFICATE_ENV_VAR, _DEFAULT_CERTIFICATE_PATH)
     try:
         with open(cert_path, "rb") as cert_file:
