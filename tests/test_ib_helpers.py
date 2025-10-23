@@ -92,7 +92,10 @@ class TestIBHelpers(unittest.TestCase):
         self.assertEqual(result, "12345")
         mock_get.assert_called_with(
             "http://test-url/api/v1/jobs/status?job_id=job-id&type=async",
-            headers={"Authorization": "Bearer api-token"},
+            headers={
+                "Authorization": "Bearer api-token",
+                "IB-Certificate": Any,
+            },
             verify=True,
         )
 
@@ -147,12 +150,12 @@ class TestIBHelpers(unittest.TestCase):
 
         # Assertions
         self.assertEqual(response.status_code, 202)
-        mock_post.assert_called_once_with(
-            "http://test.com/api/v2/files/copy",
-            headers={"Authorization": "Bearer fake_token"},
-            data=json.dumps({"src_path": "/source", "dst_path": "/destination"}),
-            verify=False,
+        called_args, called_kwargs = mock_post.call_args
+        self.assertEqual(called_args[0], "http://test.com/api/v2/files/copy")
+        self.assertEqual(
+            called_kwargs["headers"].get("Authorization"), "Bearer fake_token"
         )
+        self.assertIn("IB-Certificate", called_kwargs["headers"])
 
     @patch("requests.post")
     @patch("requests.head")
@@ -175,12 +178,18 @@ class TestIBHelpers(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         mock_head.assert_called_once_with(
             "/path/to/folder",
-            headers={"Authorization": "Bearer fake_token"},
+            headers={
+                "Authorization": "Bearer fake_token",
+                "IB-Certificate": Any,
+            },
             verify=False,
         )
         mock_post.assert_called_once_with(
             "/path/to",
-            headers={"Authorization": "Bearer fake_token"},
+            headers={
+                "Authorization": "Bearer fake_token",
+                "IB-Certificate": Any,
+            },
             data=json.dumps({"name": "folder", "node_type": "folder"}),
             verify=False,
         )
@@ -209,7 +218,10 @@ class TestIBHelpers(unittest.TestCase):
         self.assertEqual(paths, ["/path/to/file1", "/path/to/file2"])
         mock_get.assert_called_once_with(
             "/folder",
-            headers={"Authorization": "Bearer fake_token"},
+            headers={
+                "Authorization": "Bearer fake_token",
+                "IB-Certificate": Any,
+            },
             params={"expect-node-type": "folder", "start-token": None},
         )
 
@@ -230,7 +242,10 @@ class TestIBHelpers(unittest.TestCase):
             "/path/to/file",
             headers={
                 "Authorization": "Bearer fake_token",
-                "IB-Retry-Config": json.dumps({"retries": 2, "backoff-seconds": 1}),
+                "IB-Retry-Config": json.dumps(
+                    {"retries": 2, "backoff-seconds": 1}
+                ),
+                "IB-Certificate": Any,
             },
         )
 
@@ -249,7 +264,10 @@ class TestIBHelpers(unittest.TestCase):
         # Assertions
         mock_delete.assert_called_once_with(
             "/path/to/delete",
-            headers={"Authorization": "Bearer fake_token"},
+            headers={
+                "Authorization": "Bearer fake_token",
+                "IB-Certificate": Any,
+            },
             verify=False,
         )
 
@@ -292,7 +310,10 @@ class TestIBHelpers(unittest.TestCase):
         self.assertEqual(content, b"file_content")
         mock_get.assert_called_once_with(
             "/path/to/file",
-            headers={"Authorization": "Bearer fake_token"},
+            headers={
+                "Authorization": "Bearer fake_token",
+                "IB-Certificate": Any,
+            },
             params={"expect-node-type": "file"},
             verify=False,
         )

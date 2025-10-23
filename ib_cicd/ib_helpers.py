@@ -10,6 +10,8 @@ import shutil
 import zipfile
 from importlib import resources
 
+from ib_cicd.certificates import with_instabase_certificate
+
 
 def __get_file_api_root(ib_host, api_version="v2", add_files_suffix=True):
     """
@@ -93,14 +95,17 @@ def upload_chunks(ib_host, path, api_token, file_data, proxies=None):
     part_size = 10485760
     file_api_root = __get_file_api_root(ib_host)
     append_root_url = os.path.join(file_api_root, path)
-    headers = {
-        "Authorization": f"Bearer {api_token}",
-    }
+    headers = with_instabase_certificate(
+        {
+            "Authorization": f"Bearer {api_token}",
+        }
+    )
 
     bytes_io_content = BytesIO(file_data)
     with bytes_io_content as f:
         part_num = 0
         for chunk in iter(lambda: f.read(part_size), b""):
+            headers = with_instabase_certificate(headers)
             headers["IB-Cursor"] = "0" if part_num == 0 else "-1"
             resp = requests.patch(
                 append_root_url,
@@ -131,7 +136,7 @@ def upload_file(ib_host, api_token, file_path, file_data, proxies=None):
     """
     file_api_root = __get_file_api_root(ib_host)
     url = os.path.join(file_api_root, file_path)
-    headers = {"Authorization": f"Bearer {api_token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
 
     resp = requests.put(
         url, headers=headers, data=file_data, verify=False, proxies=proxies
@@ -159,7 +164,7 @@ def read_file_through_api(ib_host, api_token, path_to_file, proxies=None):
     url = os.path.join(*[file_api_root, path_to_file])
 
     params = {"expect-node-type": "file"}
-    headers = {"Authorization": f"Bearer {api_token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
 
     resp = requests.get(
         url, headers=headers, params=params, verify=False, proxies=proxies
@@ -184,7 +189,7 @@ def publish_to_marketplace(ib_host, api_token, ibsolution_path, proxies=None):
         Response object
     """
     file_api_v1 = __get_file_api_root(ib_host, api_version="v1", add_files_suffix=False)
-    headers = {"Authorization": f"Bearer {api_token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
     url = f"{file_api_v1}/marketplace/publish"
 
     args = {"ibsolution_path": ibsolution_path}
@@ -226,17 +231,22 @@ def make_api_request(
     Raises:
         requests.exceptions.RequestException: If the API request fails.
     """
-    headers = {
-        "Authorization": f"Bearer {api_token}",
-        "Content-Type": "application/json",
-    }
+    headers = with_instabase_certificate(
+        {
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json",
+        }
+    )
     if context:
         headers["Ib-Context"] = context
 
     try:
         if method == "get":
             response = requests.get(
-                url, headers=headers, verify=verify, proxies=proxies
+                url,
+                headers=headers,
+                verify=verify,
+                proxies=proxies,
             )
         elif method == "patch":
             response = requests.patch(
@@ -323,7 +333,7 @@ def check_job_status(ib_host, job_id, job_type, api_token, proxies=None):
         Response object
     """
     url = f"{ib_host}/api/v1/jobs/status?job_id={job_id}&type={job_type}"
-    headers = {"Authorization": f"Bearer {api_token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
 
     resp = requests.get(url, headers=headers, verify=False, proxies=proxies)
     content = json.loads(resp.content)
@@ -350,7 +360,7 @@ def check_job_status_build(target_url, api_token, job_id, proxies=None):
         None: On failure
     """
     url = f"{target_url}/api/v1/jobs/status?job_id={job_id}&type=async"
-    headers = {"Authorization": f"Bearer {api_token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
 
     for _ in range(15):
         try:
@@ -395,7 +405,7 @@ def unzip_files(ib_host, api_token, zip_path, destination_path=None, proxies=Non
     url = os.path.join(*[ib_host, "api/v2", "files", "extract"])
     destination_path = destination_path or ".".join(zip_path.split(".")[:-1])
 
-    headers = {"Authorization": f"Bearer {api_token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
     data = json.dumps({"src_path": zip_path, "dst_path": destination_path})
 
     resp = requests.post(url, headers=headers, data=data, verify=False, proxies=proxies)
@@ -572,10 +582,12 @@ def get_file_metadata(ib_host, api_token, file_path, proxies=None):
     file_api_root = __get_file_api_root(ib_host)
     url = os.path.join(file_api_root, file_path)
 
-    headers = {
-        "Authorization": f"Bearer {api_token}",
-        "IB-Retry-Config": json.dumps({"retries": 2, "backoff-seconds": 1}),
-    }
+    headers = with_instabase_certificate(
+        {
+            "Authorization": f"Bearer {api_token}",
+            "IB-Retry-Config": json.dumps({"retries": 2, "backoff-seconds": 1}),
+        }
+    )
 
     return requests.head(url, headers=headers, proxies=proxies)
 
@@ -594,7 +606,7 @@ def create_folder_if_it_does_not_exists(ib_host, api_token, folder_path, proxies
     """
     file_api_root = __get_file_api_root(ib_host)
     metadata_url = os.path.join(file_api_root, folder_path)
-    headers = {"Authorization": f"Bearer {api_token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
 
     r = requests.head(metadata_url, headers=headers, verify=False, proxies=proxies)
     if r.status_code == 404:
@@ -602,7 +614,11 @@ def create_folder_if_it_does_not_exists(ib_host, api_token, folder_path, proxies
         folder_name = os.path.basename(folder_path)
         data = json.dumps({"name": folder_name, "node_type": "folder"})
         return requests.post(
-            create_url, headers=headers, data=data, verify=False, proxies=proxies
+            create_url,
+            headers=with_instabase_certificate(headers),
+            data=data,
+            verify=False,
+            proxies=proxies,
         )
 
 
@@ -620,7 +636,7 @@ def list_directory(ib_host, folder, api_token, proxies=None):
     """
     file_api_root = __get_file_api_root(ib_host)
     url = os.path.join(file_api_root, folder)
-    headers = {"Authorization": f"Bearer {api_token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
 
     paths = []
     has_more = None
@@ -628,7 +644,12 @@ def list_directory(ib_host, folder, api_token, proxies=None):
 
     while has_more is not False:
         params = {"expect-node-type": "folder", "start-token": start_token}
-        resp = requests.get(url, headers=headers, params=params, proxies=proxies)
+        resp = requests.get(
+            url,
+            headers=with_instabase_certificate(headers),
+            params=params,
+            proxies=proxies,
+        )
 
         content = json.loads(resp.content)
         if resp.status_code != 200 or (
@@ -704,7 +725,7 @@ def delete_folder_or_file_from_ib(
     else:
         file_api_root = __get_file_api_root(ib_host)
         url = os.path.join(file_api_root, path_to_delete)
-        headers = {"Authorization": f"Bearer {api_token}"}
+        headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
         requests.delete(url, headers=headers, verify=False, proxies=proxies)
 
 
@@ -815,7 +836,7 @@ def delete_app(host, token, app_id, org, proxies=None):
     """
     url = f"{host}/api/v2/aihub/build/projects/app?app_id={app_id}"
 
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {token}"})
 
     try:
         response = requests.delete(url, headers=headers, proxies=proxies)
@@ -839,7 +860,7 @@ def delete_build_project(host, token, project_id, proxies=None):
         Response object on success, None on failure
     """
     url = f"{host}/api/v2/aihub/build/projects?project_id={project_id}"
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {token}"})
 
     try:
         response = requests.delete(url, headers=headers, proxies=proxies)
@@ -865,7 +886,7 @@ def get_published_app_id(ib_host, api_token, project_id, proxies=None):
     url = (
         f"{ib_host}/api/v2/aihub/build/projects?proj_id={project_id}&query_option=uuid"
     )
-    headers = {"Authorization": f"Bearer {api_token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
 
     try:
         response = requests.get(url, headers=headers, verify=False, proxies=proxies)
@@ -915,7 +936,7 @@ def trigger_regression_run(
         str: Job ID on success, empty string on failure
     """
     url = f"{url}/api/v1/flow/run_flow_async"
-    headers = {"Authorization": f"Bearer {api_token}"}
+    headers = with_instabase_certificate({"Authorization": f"Bearer {api_token}"})
     payload = {
         "ibflow_path": flow_path,
         "input_dir": input_files_path,
