@@ -11,7 +11,8 @@ def create_build_project(project_name, token, target_url, org, workspace, proxie
     """Creates a build project in the target environment"""
     url = f"{target_url}/api/v2/aihub/build/projects"
     headers = with_instabase_certificate(
-        {"Authorization": f"Bearer {token}", "Ib-Context": org}
+        {"Authorization": f"Bearer {token}", "Ib-Context": org},
+        source=False
     )
     current_unix_timestamp = int(time.time())
     data = {

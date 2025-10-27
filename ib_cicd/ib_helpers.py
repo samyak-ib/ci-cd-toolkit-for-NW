@@ -98,14 +98,15 @@ def upload_chunks(ib_host, path, api_token, file_data, proxies=None):
     headers = with_instabase_certificate(
         {
             "Authorization": f"Bearer {api_token}",
-        }
+        },
+        source=True
     )
 
     bytes_io_content = BytesIO(file_data)
     with bytes_io_content as f:
         part_num = 0
         for chunk in iter(lambda: f.read(part_size), b""):
-            headers = with_instabase_certificate(headers)
+            headers = with_instabase_certificate(headers, source=True)
             headers["IB-Cursor"] = "0" if part_num == 0 else "-1"
             resp = requests.patch(
                 append_root_url,
